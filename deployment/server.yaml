@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server
+  labels:
+    app: server
+spec:
+  replicas: 3
+  minReadySeconds: 5
+  selector:
+    matchLabels:
+      app: demo
+      component: server
+  template:
+    metadata:
+      annotations:
+        profiles.grafana.com/memory.scrape: "true"
+        profiles.grafana.com/memory.port_name: "http"
+        profiles.grafana.com/cpu.scrape: "true"
+        profiles.grafana.com/cpu.port_name: "http"
+        profiles.grafana.com/goroutine.scrape: "true"
+        profiles.grafana.com/goroutine.port_name: "http"
+        profiles.grafana.com/fgprof.scrape: "true"
+        profiles.grafana.com/fgprof.port_name: "http"
+      labels:
+        app: demo
+        component: server
+    spec:
+      containers:
+      - name: server
+        image: docker.io/simonswine/demo-golang-sre-day@sha256:99474a42c099bdeb75f405f77e4cb52c767fd4ad982495154ad79281bcad8f81
+        ports:
+        - containerPort: 6060
+          name: http
+        resources:
+          limits:
+            cpu: 100m
+            memory: 64M
+          requests:
+            cpu: 25m
+            memory: 16M
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: server
+spec:
+  selector:
+      app: demo
+      component: server
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: http
